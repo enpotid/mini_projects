@@ -13,17 +13,21 @@ fn main() {
         }
     }
 
-    let sin45 = 0.5_f32.sqrt();
-    let rotation_matrix_a: [[f32; 3]; 3] =
-        [[0.5, 0.5, sin45], [0.5, 0.5, -sin45], [-sin45, sin45, 0.0]];
+    let rotation_matrix: [[f32; 3]; 3] = [
+        [0.9999238, 0.00007615, 0.0123407],
+        [0.00007615, 0.9999238, -0.0123407],
+        [-0.0123407, 0.0123407, 0.9998477],
+    ];
 
     loop {
         println!("\x1B[2J\x1B[H");
 
+        let mut screen: Vec<Vec<u8>> = Vec::new();
+
         let mut min_y = f32::MAX;
         let mut min_list = Vec::new();
         for i in 0..8 {
-            vertices[i] = matvec(rotation_matrix_a, vertices[i]);
+            vertices[i] = matvec(rotation_matrix, vertices[i]);
             if min_y > vertices[i][1] {
                 min_y = vertices[i][1];
                 min_list = vec![i];
@@ -33,19 +37,37 @@ fn main() {
         }
 
         match min_list.len() {
-            1 => {}
+            1 => {
+                for p in [1, 2, 4] {
+                    let v = vertices[min_list[0] ^ p];
+                    let mut face_vertices = vec![[v[0], v[2]]];
+
+                    for i in [1, 2, 4] {
+                        let v = vertices[min_list[0] ^ (p | (i ^ 7))];
+                        face_vertices.push([v[0], v[2]]);
+                    }
+
+                    draw(&mut screen, face_vertices);
+                }
+            }
             2 => {}
-            4 => {}
+            4 => {
+                let mut face_vertices = Vec::new();
+                for i in min_list {
+                    let v = vertices[i];
+                    face_vertices.push([v[0], v[2]]);
+                }
+
+                draw(&mut screen, face_vertices);
+            }
             _ => {}
         }
-
-        draw(&vertices);
 
         thread::sleep(Duration::from_micros(1));
     }
 }
 
-fn draw(vertices: &Vec<[f32; 3]>) {}
+fn draw(screen: &mut Vec<Vec<u8>>, vertices: Vec<[f32; 2]>) {}
 
 fn matvec(matrix: [[f32; 3]; 3], vector: [f32; 3]) -> [f32; 3] {
     [
