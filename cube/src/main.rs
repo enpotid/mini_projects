@@ -50,7 +50,28 @@ fn main() {
                     draw(&mut screen, face_vertices);
                 }
             }
-            2 => {}
+            2 => {
+                let x = (min_list[0] ^ min_list[1]).ilog2() as usize;
+                let o = 1 << ((x + 1) % 3);
+                let t = 1 << ((x + 2) % 3);
+
+                let mut d = Vec::new();
+                for y in &min_list {
+                    let v = vertices[y ^ (o | t)];
+                    d.push([v[0], v[2]]);
+                }
+
+                for i in [o, t] {
+                    let mut face_vertices = Vec::new();
+                    for y in &min_list {
+                        let v = vertices[y ^ i];
+                        face_vertices.push([v[0], v[2]]);
+                    }
+
+                    face_vertices.extend(&d);
+                    draw(&mut screen, face_vertices);
+                }
+            }
             4 => {
                 let mut face_vertices = Vec::new();
                 for i in min_list {
